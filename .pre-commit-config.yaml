@@ -11,6 +11,6 @@ repos:
     repo: https://github.com/pocc/pre-commit-hooks.git
     hooks:
     -   id: clang-format
-    -   id: cpplint
+    -   id: clang-tidy
     -   id: cppcheck
 

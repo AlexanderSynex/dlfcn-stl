@@ -36,6 +36,9 @@ class DynamicLibrary {
 
   virtual ~DynamicLibrary() = default;
 
+  bool loaded() const { return not(lib == nullptr); }
+  operator bool() const { return loaded(); }
+
  private:
   DynamicLibrary(std::string_view path, MODIFIERS modifiers)
       : lib{LibraryHandler(dlopen(path.data(), static_cast<int>(modifiers)))} {}

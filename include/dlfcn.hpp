@@ -3,10 +3,11 @@
 #pragma once
 
 #include <dlfcn.h>
+#include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string_view>
 #include <type_traits>
-#include <utility>
 
 namespace snx {
 namespace dlfcn {
@@ -37,6 +38,8 @@ class DynamicLibrary {
 
   using LibraryHandler = std::unique_ptr<void, Deleter>;
 
+  template <typename Func> using Callable = std::function<Func>;
+
  public:
   explicit DynamicLibrary(std::string_view path)
       : DynamicLibrary(path, static_cast<std::underlying_type<MODIFIERS>::type>(
@@ -47,11 +50,20 @@ class DynamicLibrary {
   bool loaded() const { return not(lib == nullptr); }
   operator bool() const { return loaded(); }
 
+  template <typename Func> Callable<Func> extract(std::string_view name) & {
+    if (not lib) {
+      throw std::invalid_argument("Library was not properly loaded");
+    }
+    return Callable<Func>{
+        reinterpret_cast<Func *>(dlsym(lib.get(), name.data()))};
+  }
+
  private:
   DynamicLibrary(std::string_view path, int modifiers)
       : lib{LibraryHandler(dlopen(path.data(), modifiers))} {}
 
   LibraryHandler lib = nullptr;
 };
+
 }  // namespace dlfcn
 }  // namespace snx

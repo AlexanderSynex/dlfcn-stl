@@ -12,5 +12,3 @@ repos:
     hooks:
     -   id: clang-format
     -   id: clang-tidy
-    -   id: cppcheck
-

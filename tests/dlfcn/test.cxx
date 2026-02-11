@@ -2,10 +2,21 @@
 #include <gtest/gtest.h>
 
 #include <gnu/lib-names.h>
+#include <stdexcept>
 
 using namespace snx;
 
 TEST(dlfcn, loading) {
   EXPECT_TRUE(dlfcn::DynamicLibrary(LIBM_SO));
   EXPECT_FALSE(dlfcn::DynamicLibrary("libfalse"));
+}
+
+TEST(dlfcn, extracting) {
+  auto validLibrary = dlfcn::DynamicLibrary(LIBM_SO);
+  auto errorLibrary = dlfcn::DynamicLibrary("libfalse");
+
+  EXPECT_NO_THROW(validLibrary.extract<double(double)>("cos"));
+  EXPECT_THROW(errorLibrary.extract<int(int)>("asd"), std::invalid_argument);
+
+  EXPECT_FLOAT_EQ(validLibrary.extract<double(double)>("cos")(0), 1);
 }

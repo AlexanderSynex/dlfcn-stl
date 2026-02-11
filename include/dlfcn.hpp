@@ -50,7 +50,9 @@ class DynamicLibrary {
   bool loaded() const { return not(lib == nullptr); }
   operator bool() const { return loaded(); }
 
-  template <typename Func> Callable<Func> extract(std::string_view name) & {
+  template <typename Func>
+  std::enable_if_t<std::is_function_v<Func>, Callable<Func>>
+  extract(std::string_view name) & {
     if (not lib) {
       throw std::invalid_argument("Library was not properly loaded");
     }

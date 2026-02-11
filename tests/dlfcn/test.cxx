@@ -16,7 +16,11 @@ TEST(dlfcn, extracting) {
   auto errorLibrary = dlfcn::DynamicLibrary("libfalse");
 
   EXPECT_NO_THROW(validLibrary.extract<double(double)>("cos"));
+  EXPECT_THROW(validLibrary.extract<double(double)>("cosqqqq"),
+               std::invalid_argument);
   EXPECT_THROW(errorLibrary.extract<int(int)>("asd"), std::invalid_argument);
 
   EXPECT_FLOAT_EQ(validLibrary.extract<double(double)>("cos")(0), 1);
+
+  /// @todo Добавить тесты для извлечения переменных
 }

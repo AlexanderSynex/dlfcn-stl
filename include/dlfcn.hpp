@@ -36,7 +36,7 @@ class DynamicLibrary {
     void operator()(void *ptr) const { dlclose(ptr); }
   };
 
-  using LibraryHandler = std::unique_ptr<void, Deleter>;
+  using SymbolHandler = std::unique_ptr<void, Deleter>;
 
   template <typename Func> using Callable = std::function<Func>;
 
@@ -53,18 +53,41 @@ class DynamicLibrary {
   template <typename Func>
   std::enable_if_t<std::is_function_v<Func>, Callable<Func>>
   extract(std::string_view name) & {
-    if (not lib) {
-      throw std::invalid_argument("Library was not properly loaded");
-    }
     return Callable<Func>{
-        reinterpret_cast<Func *>(dlsym(lib.get(), name.data()))};
+        reinterpret_cast<Func *>(extractRaw(name, "Function").release())};
+  }
+
+  template <typename Type>
+  std::enable_if_t<not std::is_function_v<Type>, Type>
+  extract(std::string_view name) & {
+    return reinterpret_cast<Type &>(extractRaw(name, "Variable"));
   }
 
  private:
-  DynamicLibrary(std::string_view path, int modifiers)
-      : lib{LibraryHandler(dlopen(path.data(), modifiers))} {}
+  SymbolHandler extractRaw(std::string_view name, std::string_view symbolName) {
+    if (not lib) {
+      throw std::invalid_argument("Library was not properly loaded");
+    }
+    auto func = dlsym(lib.get(), name.data());
 
-  LibraryHandler lib = nullptr;
+    auto quoted = [](std::string_view str) {
+      using namespace std::string_literals;
+      return "\""s + std::string{str} + '"';
+    };
+
+    using namespace std::string_literals;
+    if (not func) {
+      throw std::invalid_argument(std::string{symbolName} + " with name "s +
+                                  quoted(name) + " was not imported");
+    }
+
+    return SymbolHandler{dlsym(lib.get(), name.data())};
+  }
+
+  DynamicLibrary(std::string_view path, int modifiers)
+      : lib{SymbolHandler(dlopen(path.data(), modifiers))} {}
+
+  SymbolHandler lib = nullptr;
 };
 
 }  // namespace dlfcn

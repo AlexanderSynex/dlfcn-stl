@@ -5,6 +5,8 @@
 #include <dlfcn.h>
 #include <memory>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 
 namespace snx {
 namespace dlfcn {
@@ -19,9 +21,14 @@ enum class MODIFIERS : decltype(RTLD_LAZY) {
   NODELETE = RTLD_NODELETE,  // since glibc 2.2
   NOLOAD   = RTLD_NOLOAD,    // since glibc 2.2
   DEEPBIND = RTLD_DEEPBIND,  // since glibc 2.3.4
-
   // clang-format on
 };
+
+auto operator|(MODIFIERS m1, MODIFIERS m2)
+    -> std::underlying_type<MODIFIERS>::type {
+  return static_cast<std::underlying_type<MODIFIERS>::type>(m1) |
+         static_cast<std::underlying_type<MODIFIERS>::type>(m2);
+}
 
 class DynamicLibrary {
   struct Deleter {
@@ -32,7 +39,8 @@ class DynamicLibrary {
 
  public:
   explicit DynamicLibrary(std::string_view path)
-      : DynamicLibrary(path, MODIFIERS::LAZY) {}
+      : DynamicLibrary(path, static_cast<std::underlying_type<MODIFIERS>::type>(
+                                 MODIFIERS::LAZY)) {}
 
   virtual ~DynamicLibrary() = default;
 
@@ -40,8 +48,8 @@ class DynamicLibrary {
   operator bool() const { return loaded(); }
 
  private:
-  DynamicLibrary(std::string_view path, MODIFIERS modifiers)
-      : lib{LibraryHandler(dlopen(path.data(), static_cast<int>(modifiers)))} {}
+  DynamicLibrary(std::string_view path, int modifiers)
+      : lib{LibraryHandler(dlopen(path.data(), modifiers))} {}
 
   LibraryHandler lib = nullptr;
 };

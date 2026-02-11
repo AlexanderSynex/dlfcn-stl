@@ -11,7 +11,7 @@ include(GoogleTest)
 
 function(create_test)
   set(TARGET_NAME tests)
-  set(multiValueArgs SOURCES TESTS)
+  set(multiValueArgs SOURCES TESTS DEPENDS)
   # Parse the arguments
   cmake_parse_arguments(ARG "" "" "${multiValueArgs}" ${ARGN})
 
@@ -20,8 +20,13 @@ function(create_test)
     list(APPEND TEST_FILES ${TEST_DIR}/test.cxx)
   endforeach()
   target_sources(${TARGET_NAME} PRIVATE ${TEST_FILES})
-  target_link_libraries(${TARGET_NAME} PRIVATE gtest gtest_main json_lib)
+  target_link_libraries(${TARGET_NAME} PRIVATE gtest gtest_main)
+
+  if (ARG_DEPENDS)
+    target_link_libraries(${TARGET_NAME} PUBLIC "${ARG_DEPENDS}")
+  endif()
+
   gtest_discover_tests(${TARGET_NAME})
 endfunction()
 
-# create_test(TESTS test/path)
+create_test(TESTS dlfcn DEPENDS dlfcn)

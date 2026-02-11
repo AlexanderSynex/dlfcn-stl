@@ -29,3 +29,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(third-party)
 
 add_library(dlfcn INTERFACE include/dlfcn.hpp)
+target_include_directories(dlfcn INTERFACE include)
+
+add_subdirectory(tests)

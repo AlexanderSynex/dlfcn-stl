@@ -31,7 +31,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(third-party)
 
-add_library(dlfcn INTERFACE include/dlfcn.hpp)
-target_include_directories(dlfcn INTERFACE include)
+file(GLOB_RECURSE SOURCES src/*.cpp)
+
+add_library(dlfcn STATIC ${SOURCES})
+target_include_directories(dlfcn PUBLIC include)
 
 add_subdirectory(tests)
+
+if (EXISTS ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json)
+  file(COPY ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json DESTINATION ${CMAKE_SOURCE_DIR})
+endif()

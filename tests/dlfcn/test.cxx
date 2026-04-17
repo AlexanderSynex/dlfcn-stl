@@ -1,4 +1,5 @@
-#include "dlfcn.hpp"
+#include "dlfcn/dynamic_library.hpp"
+
 #include <gtest/gtest.h>
 
 #include <gnu/lib-names.h>
@@ -12,8 +13,11 @@ TEST(dlfcn, loading) {
 }
 
 TEST(dlfcn, extracting) {
-  auto validLibrary = dlfcn::DynamicLibrary(LIBM_SO);
+  auto validLibrary = dlfcn::DynamicLibrary(LIBM_SO)
+                      << dlfcn::MODIFIERS::GLOBAL;
   auto errorLibrary = dlfcn::DynamicLibrary("libfalse");
+
+  // dlfcn::DynamicLibrary(LIBM_SO).extract<double(double)>("asd");
 
   EXPECT_NO_THROW(validLibrary.extract<double(double)>("cos"));
   EXPECT_THROW(validLibrary.extract<double(double)>("cosqqqq"),
